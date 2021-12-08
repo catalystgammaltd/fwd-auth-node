@@ -16,10 +16,10 @@ const config : Config = {
     PORT: parseInt(process.env.PORT) || 3000,
     PROBES_PORT: parseInt(process.env.PROBES_PORT) || 9090,
     COOKIE_SECRET:  process.env.COOKIE_SECRET || Buffer.from(crypto.randomBytes(64)).toString('base64'),
-    CALLBACK_PATH: process.env.CALLBACK_PATH || "/_oauth",
+    CALLBACK_PATH: process.env.CALLBACK_PATH || "/callback",
     OIDC_CLIENT_ID: process.env.OIDC_CLIENT_ID || "KWzNWn6lWu4kh8pxxdmqRPJgOoSvCr4Q",
     OIDC_CLIENT_SECRET: process.env.OIDC_CLIENT_SECRET,
-    OIDC_BASE_URL: process.env.OIDC_BASE_URL || "https://auth.staging.catalystgamma.com",
+    OIDC_BASE_URL: process.env.OIDC_BASE_URL || "https://auth2.staging.catalystgamma.com",
     OIDC_ISSUER_BASE_URL: process.env.OIDC_ISSUER_BASE_URL || "https://catalystgamma.eu.auth0.com/",
 };
 

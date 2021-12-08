@@ -1,20 +1,10 @@
-# Express TypeScript template
+# Traefik foward auth handler in node
 
-# Pre-reqs
+## Todo:
 
-- Install [Node.js](https://nodejs.org/en/)
-- Install [VS Code](https://code.visualstudio.com/)
+- [ ] Change action script so that git tags generate image tags
 
-# Getting started
-
-- Clone the repository
-
-```
-git clone https://github.com/greenroach/express-ts-template.git
-```
-
-- Install dependencies
-
+## Build and run
 ```
 cd <project_name>
 npm install
@@ -54,7 +44,3 @@ We added `"protocol": "inspector"` which tells VS Code that we're using the late
 With this file in place, you can hit `F5` to attach a debugger.
 You will probably have multiple node processes running, so you need to find the one that shows `node dist/server.js`.
 Now just set your breakpoints and go!
-
----
-
-Based on [TypeScript Node Starter](https://github.com/Microsoft/TypeScript-Node-Starter) and [Express Generator](https://github.com/expressjs/generator)
