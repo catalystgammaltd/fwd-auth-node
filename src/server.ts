@@ -6,13 +6,13 @@ import * as path from "path";
 import { createLightship } from 'lightship';
 import { Command, Option } from "commander";
 import express from "express";
+import { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import { auth } from "express-openid-connect";
 
 // Internals
 import { version } from '../package.json';
-import { errorHandler } from "./middlewares/errorHandler";
 
 
 /**
@@ -22,7 +22,7 @@ const program = new Command();
 program
     .version(version)
     .addOption(
-        new Option('-p, --port <port>', 'Port to run the srevice on')
+        new Option('-p, --port <port>', 'Port to run the service on')
         .default(3000)
         .env('PORT')
         .makeOptionMandatory())
@@ -100,7 +100,16 @@ app.all("*", async (req, res) => {
 
 });
 
-app.use(errorHandler);
+declare type WebError = Error & { status?: number };
+app.use((err: WebError, req: Request, res: Response, next: NextFunction): void => {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get("env") === "development" ? err : {};
+
+    // render the error page
+    res.status(err.status || 500);
+    res.render("error", { title: err.name, message: err.message });
+});
 
 
 
