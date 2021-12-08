@@ -110,7 +110,7 @@ app.use(errorHandler);
 
 const server = app.listen(config.port, () => {
     const addr = server.address();
-    console.log(`Listening on ${addr}`);
+    console.log(`Listening on ${config.port}`);
     lightship.signalReady();
 });
 
