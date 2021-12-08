@@ -1,9 +1,13 @@
 # Traefik foward auth handler in node
 
+## Done:
+
+- [x] Add cli arg to enable config via k8s manifest (see https://github.com/tj/commander.js/blob/master/examples/options-env.js)
+
 ## Todo:
 
+- [ ] Add scope CLI arg to enable fwd-auth to be deployed for different scopes
 - [ ] Change action script so that git tags generate image tags
-- [ ] Add cli arg to enable config via k8s manifest (see https://github.com/tj/commander.js/blob/master/examples/options-env.js)
 
 ## Build and run
 ```

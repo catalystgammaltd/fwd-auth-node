@@ -80,7 +80,6 @@ const lightship = createLightship({
 });
 
 
-
 /**
  * Create express app
  */
@@ -93,25 +92,50 @@ app.use(express.static(path.join(__dirname, "../public")));
 app.use(logger("dev"));
 app.use(cookieParser(config.cookieSecret));
 app.use(auth({
-    authRequired: true,
+    authRequired: false,
     auth0Logout: true,
     idpLogout: true,
     issuerBaseURL: config.oidcIssuerUrl,
     baseURL: config.oidcBaseUrl,
     clientID: config.oidcClientId,
     secret: config.cookieSecret,
-    // afterCallback: async () => {}
+    routes: {
+        // We want to handle these manually to account for forwarding
+        login: false,
+    },
 }));
 
-app.all("*", async (req, res) => {
-    // Save userinfo in a cookie
-    const userInfo = await req.oidc.fetchUserInfo();
-    res.cookie("userinfo", Buffer.from(JSON.stringify(userInfo)).toString('base64'), { signed:true });
-    // We're good to go.
-    res.status(200).send('OK');
-
+app.get('*', async (req, res) => {
+    
+    if(req.oidc.isAuthenticated){
+        // authenticated user should be allowed through
+        // Apps will then make their own decision based on scope.
+        const userinfo = await  req.oidc.fetchUserInfo();
+        res
+            .header('X-Forwarded-User', Buffer.from(JSON.stringify(userinfo)).toString('base64'))
+            .status(200)
+            .send('OK');
+    }else{
+        // Store Forward params in cookie?
+        // Trigger login
+        res.oidc.login();
+    }
+    
 });
 
+// app.all("*", async (req, res) => {
+//     // Save userinfo in a cookie
+//     const userInfo = await req.oidc.fetchUserInfo();
+//     res.cookie("userinfo", Buffer.from(JSON.stringify(userInfo)).toString('base64'), { signed:true });
+//     // We're good to go.
+//     res.status(200).send('OK');
+
+// });
+
+
+/**
+ * Error handling
+ */
 declare type WebError = Error & { status?: number };
 app.use((err: WebError, req: Request, res: Response, next: NextFunction): void => {
     // set locals, only providing error in development
