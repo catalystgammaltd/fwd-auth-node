@@ -10,9 +10,20 @@ import { NextFunction, Request, Response } from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import { auth } from "express-openid-connect";
+import winston, { createLogger } from "winston";
 
 // Internals
 import { version } from '../package.json';
+
+
+/**
+ * Set up application logger
+ */
+const log = createLogger({
+    level: 'debug',
+    exitOnError: false,
+    transports: [new winston.transports.Console()],
+});
 
 
 /**
@@ -89,6 +100,7 @@ app.use(auth({
     baseURL: config.oidcBaseUrl,
     clientID: config.oidcClientId,
     secret: config.cookieSecret,
+    // afterCallback: async () => {}
 }));
 
 app.all("*", async (req, res) => {
@@ -105,7 +117,9 @@ app.use((err: WebError, req: Request, res: Response, next: NextFunction): void =
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get("env") === "development" ? err : {};
-
+    
+    log.error("Unexpected error occured", err);
+    
     // render the error page
     res.status(err.status || 500);
     res.render("error", { title: err.name, message: err.message });
@@ -119,12 +133,13 @@ app.use((err: WebError, req: Request, res: Response, next: NextFunction): void =
 
 const server = app.listen(config.port, () => {
     const addr = server.address();
-    console.log(`Listening on ${config.port}`);
+    log.info(`Listening on ${config.port}`);
     lightship.signalReady();
 });
 
 server.on("error", (error: NodeJS.ErrnoException) => {
     lightship.shutdown();
+    log.error("Fatal error.");
 
     if (error.syscall !== "listen") {
         throw error;
