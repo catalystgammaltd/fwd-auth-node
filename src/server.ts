@@ -1,11 +1,26 @@
 import { app } from "./app";
-
+import { createLightship } from 'lightship';
+import config from "./config";
+  
 const port = app.get("port");
 
-const server = app.listen(port, onListening);
-server.on("error", onError);
+// Set up /live, /health and /ready endpoints for kubernetes.
+const lightship = createLightship({
+    port: config.PROBES_PORT,
+    
+});
 
-function onError(error: NodeJS.ErrnoException) {
+const server = app.listen(port, () => {
+    const addr = server.address();
+    const bind = typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
+    console.log(`Listening on ${bind}`);
+    lightship.signalReady();
+});
+
+
+server.on("error", (error: NodeJS.ErrnoException) => {
+    lightship.shutdown();
+
     if (error.syscall !== "listen") {
         throw error;
     }
@@ -25,13 +40,15 @@ function onError(error: NodeJS.ErrnoException) {
         default:
             throw error;
     }
-}
+});
 
-function onListening() {
-    const addr = server.address();
-    const bind =
-        typeof addr === "string" ? `pipe ${addr}` : `port ${addr.port}`;
-    console.log(`Listening on ${bind}`);
-}
+// Taken care of by lightship
+// process.on('SIGTERM', () => {
+//     console.error('SIGTERM signal received: closing HTTP server');
+//     server.close(() => {
+//         lightship.shutdown();
+//         console.error('HTTP server closed');
+//     });
+// });
 
 export default server;

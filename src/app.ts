@@ -15,7 +15,7 @@ import { RSA_NO_PADDING } from "constants";
 export const app = express();
 
 // Express configuration
-app.set("port", process.env.PORT || 3000);
+app.set("port", config.PORT);
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
 

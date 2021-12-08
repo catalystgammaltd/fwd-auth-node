@@ -2,6 +2,8 @@ import crypto from "crypto";
 
 
 interface Config {
+    PORT: number
+    PROBES_PORT: number,
     COOKIE_SECRET: string
     CALLBACK_PATH: string
     OIDC_CLIENT_ID: string
@@ -11,6 +13,8 @@ interface Config {
 }
 
 const config : Config = { 
+    PORT: parseInt(process.env.PORT) || 3000,
+    PROBES_PORT: parseInt(process.env.PROBES_PORT) || 9090,
     COOKIE_SECRET:  process.env.COOKIE_SECRET || Buffer.from(crypto.randomBytes(64)).toString('base64'),
     CALLBACK_PATH: process.env.CALLBACK_PATH || "/_oauth",
     OIDC_CLIENT_ID: process.env.OIDC_CLIENT_ID || "KWzNWn6lWu4kh8pxxdmqRPJgOoSvCr4Q",
