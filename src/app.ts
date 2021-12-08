@@ -2,14 +2,12 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 import * as path from "path";
+import { auth } from "express-openid-connect";
 
 
 import config from "./config";
-import { callbackHandler, authHandler } from "./auth";
-import { auth } from "express-openid-connect";
-
 import { errorHandler } from "./middlewares/errorHandler";
-import { RSA_NO_PADDING } from "constants";
+
 
 // Create Express server
 export const app = express();

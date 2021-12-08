@@ -3,7 +3,7 @@
 ## Todo:
 
 - [ ] Change action script so that git tags generate image tags
-- [ ] Add cli arg to enable config via k8s manifest
+- [ ] Add cli arg to enable config via k8s manifest (see https://github.com/tj/commander.js/blob/master/examples/options-env.js)
 
 ## Build and run
 ```

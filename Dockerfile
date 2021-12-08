@@ -14,4 +14,4 @@ COPY --from=build-deps /build/dist ./dist
 COPY --from=build-deps /build/node_modules ./node_modules
 
 EXPOSE 3000
-CMD ["node", "dist/server.js"]
+ENTRYPOINT [ "node", "dist/src/server.js"]
