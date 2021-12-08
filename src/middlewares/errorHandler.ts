@@ -11,7 +11,3 @@ export const errorHandler = (err: WebError, req: Request, res: Response, next: N
     res.status(err.status || 500);
     res.render("error", { title: err.name, message: err.message });
 };
-
-export const errorNotFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
-    next(createError(404));
-};
