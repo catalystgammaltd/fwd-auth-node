@@ -3,6 +3,7 @@
 ## Todo:
 
 - [ ] Change action script so that git tags generate image tags
+- [ ] Add cli arg to enable config via k8s manifest
 
 ## Build and run
 ```
