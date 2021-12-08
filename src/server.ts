@@ -80,15 +80,15 @@ app.set("view engine", "pug");
 
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(logger("dev"));
-app.use(cookieParser(config.COOKIE_SECRET));
+app.use(cookieParser(config.cookieSecret));
 app.use(auth({
     authRequired: true,
     auth0Logout: true,
     idpLogout: true,
-    issuerBaseURL: config.OIDC_ISSUER_BASE_URL,
-    baseURL: config.OIDC_BASE_URL,
-    clientID: config.OIDC_CLIENT_ID,
-    secret: config.COOKIE_SECRET,
+    issuerBaseURL: config.oidcIssuerUrl,
+    baseURL: config.oidcBaseUrl,
+    clientID: config.oidcClientId,
+    secret: config.cookieSecret,
 }));
 
 app.all("*", async (req, res) => {
