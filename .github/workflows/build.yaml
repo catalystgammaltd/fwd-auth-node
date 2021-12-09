@@ -19,7 +19,6 @@ jobs:
           images: fractallambda/fwd-auth-node
           tags: |
             type=ref,event=tag
-            type=ref,value={{branch}}-{{sha}},event=branch
       - 
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -43,5 +42,5 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.meta.outputs.tags }},${{ env.BRANCH }}-${{ env.SHA }}"
           labels: ${{ steps.meta.outputs.labels }}
