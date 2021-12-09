@@ -93,6 +93,8 @@ const redir_cookie_name = '_fwd_auth_redir';
 const default_landing = "https://app.catalystgamma.com";
 
 
+console.log(config);
+
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
 
@@ -111,10 +113,11 @@ app.use(auth({
         // We want to handle these manually to account for forwarding
         login: false,
         postLogoutRedirect: default_landing,
+        callback: config.callbackPath,
     },
     session:{
         cookie:{
-            domain: config.commonAuthdomain,
+            domain: config.commonAuthDomain,
         },
     },
 }));
@@ -132,19 +135,27 @@ interface FwdArgs {
 }
 
 function urlFromFwdArgs(fwdArgs:FwdArgs): string{
-    return `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`;
+    const url = `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`
+    log.debug("Forward URL", url);
+    return url;
+
 }
 
 app.all(config.callbackPath, async (req, res) => {
+    log.debug("Auth callback endpoint...");
     if(req.oidc.isAuthenticated()){
+        log.debug("User authenticated.");
         const fwdArgs : FwdArgs = JSON.parse(req.signedCookies[redir_cookie_name]);
         if(fwdArgs){
+            log.debug("User's forwarding cookies will be honoured");
             res.redirect(urlFromFwdArgs(fwdArgs));
         }else{
+            log.debug("User will be redirceted to default page");
             res.redirect(default_landing);
         }
     }else{
         // Trigger login
+        log.debug("User is unauthenticated");
         res.oidc.login();
     }
 });
@@ -157,18 +168,21 @@ function isForwarded(req: express.Request) : boolean {
 }
 
 
-app.get('*', async (req, res) => {
+app.all('*', async (req, res) => {
     if(req.oidc.isAuthenticated()){
+        log.debug("Authenticated request received.");
         if(isForwarded(req)){
             // Fowarded request from authenticated users
             // should be allowed through.
             // 
             // Apps will then make their own Authorization 
             // decisions for now.
+            log.debug("Authenticated, forwarded request will be approved.");
             res.status(200).send('OK');
         }else{
             // directly accessing the auth service is probably an error. 
             // Show an appropriate page
+            log.debug("Authenticated request was not forwarded. BadDroids error.");
             res.render('bad-droids', { targetUrl: default_landing });
         }
     }else{
@@ -186,23 +200,14 @@ app.get('*', async (req, res) => {
             redir_cookie_name,
             Buffer.from(JSON.stringify(fwdArgs)).toString('base64'), 
             { 
-                domain: config.commonAuthdomain,
+                domain: config.commonAuthDomain,
                 signed: true, 
             });
 
         // Trigger login
-        res.oidc.login();
+        res.oidc.login({ returnTo: `https://${config.baseUrl}${config.callbackPath}` });
     }
 });
-
-// app.all("*", async (req, res) => {
-//     // Save userinfo in a cookie
-//     const userInfo = await req.oidc.fetchUserInfo();
-//     res.cookie("userinfo", Buffer.from(JSON.stringify(userInfo)).toString('base64'), { signed:true });
-//     // We're good to go.
-//     res.status(200).send('OK');
-
-// });
 
 
 /**
@@ -212,9 +217,10 @@ declare type WebError = Error & { status?: number };
 app.use((err: WebError, req: Request, res: Response, next: NextFunction): void => {
     // set locals, only providing error in development
     res.locals.message = err.message;
-    res.locals.error = req.app.get("env") === "development" ? err : {};
     
     log.error("Unexpected error occured", err);
+    // console.log(req);
+    // console.log(res);
     
     // render the error page
     res.status(err.status || 500);
@@ -255,14 +261,3 @@ server.on("error", (error: NodeJS.ErrnoException) => {
             throw error;
     }
 });
-
-// Taken care of by lightship
-// process.on('SIGTERM', () => {
-//     console.error('SIGTERM signal received: closing HTTP server');
-//     server.close(() => {
-//         lightship.shutdown();
-//         console.error('HTTP server closed');
-//     });
-// });
-
-// export default server;
