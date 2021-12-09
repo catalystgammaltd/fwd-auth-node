@@ -1,6 +1,6 @@
 {
     "name": "fwd-auth-node",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "Traefik forward auth handler supporting OIDC on Node",
     "main": "server.js",
     "scripts": {
