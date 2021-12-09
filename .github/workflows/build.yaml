@@ -22,7 +22,7 @@ jobs:
           images: fractallambda/fwd-auth-node
           tags: |
             type=ref,event=tag
-            type=ref,value={{branch}}-{{sha}},event=branch
+            type=raw,value={{branch}}-{{sha}}
             
       -
         name: Set up Docker Buildx
