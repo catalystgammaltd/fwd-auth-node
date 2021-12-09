@@ -66,6 +66,10 @@ program
         new Option('--oidc-issuer-url <issuerUrl>', 'The OIDC issuer url (eg: https://catalystgamma.eu.auth0.com).')
         .env('OIDC_ISSUER_URL')
         .makeOptionMandatory())
+    .addOption(
+        new Option('--common-auth-domain <domain>', 'The common auth domain to be used for authentication cookies')
+        .env('COMMON_AUTH_DOMAIN')
+        .makeOptionMandatory())
     .showHelpAfterError();
 
 program.parse(process.argv);
@@ -85,6 +89,10 @@ const lightship = createLightship({
  */
 export const app = express();
 
+const redir_cookie_name = '_fwd_auth_redir';
+const default_landing = "https://app.catalystgamma.com";
+
+
 app.set("views", path.join(__dirname, "../views"));
 app.set("view engine", "pug");
 
@@ -102,25 +110,89 @@ app.use(auth({
     routes: {
         // We want to handle these manually to account for forwarding
         login: false,
+        postLogoutRedirect: default_landing,
+    },
+    session:{
+        cookie:{
+            domain: config.commonAuthdomain,
+        },
     },
 }));
 
-app.get('*', async (req, res) => {
-    
-    if(req.oidc.isAuthenticated){
-        // authenticated user should be allowed through
-        // Apps will then make their own decision based on scope.
-        const userinfo = await  req.oidc.fetchUserInfo();
-        res
-            .header('X-Forwarded-User', Buffer.from(JSON.stringify(userinfo)).toString('base64'))
-            .status(200)
-            .send('OK');
+
+
+
+
+interface FwdArgs {
+    host: string
+    method: string
+    port: string
+    prefix: string
+    proto: string
+}
+
+function urlFromFwdArgs(fwdArgs:FwdArgs): string{
+    return `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`;
+}
+
+app.all(config.callbackPath, async (req, res) => {
+    if(req.oidc.isAuthenticated()){
+        const fwdArgs : FwdArgs = JSON.parse(req.signedCookies[redir_cookie_name]);
+        if(fwdArgs){
+            res.redirect(urlFromFwdArgs(fwdArgs));
+        }else{
+            res.redirect(default_landing);
+        }
     }else{
-        // Store Forward params in cookie?
         // Trigger login
         res.oidc.login();
     }
-    
+});
+
+function isForwarded(req: express.Request) : boolean {
+    if(req.header('x-forwarded-host') && req.header('x-forwarded-prefix')){
+        return true;
+    }
+    return false;
+}
+
+
+app.get('*', async (req, res) => {
+    if(req.oidc.isAuthenticated()){
+        if(isForwarded(req)){
+            // Fowarded request from authenticated users
+            // should be allowed through.
+            // 
+            // Apps will then make their own Authorization 
+            // decisions for now.
+            res.status(200).send('OK');
+        }else{
+            // directly accessing the auth service is probably an error. 
+            // Show an appropriate page
+            res.render('bad-droids', { targetUrl: default_landing });
+        }
+    }else{
+        log.info("Request unauthenticated. Triggering login flow.");
+
+        // Set up redirect cookie
+        const fwdArgs : FwdArgs = {
+            "host": req.header('x-forwarded-host'),
+            "method":req.header('x-forwarded-method'),
+            "port":req.header('x-forwarded-port'),
+            "prefix":req.header('x-forwarded-prefix'),
+            "proto":req.header('x-forwarded-proto'),
+        };
+        res.cookie(
+            redir_cookie_name,
+            Buffer.from(JSON.stringify(fwdArgs)).toString('base64'), 
+            { 
+                domain: config.commonAuthdomain,
+                signed: true, 
+            });
+
+        // Trigger login
+        res.oidc.login();
+    }
 });
 
 // app.all("*", async (req, res) => {
@@ -162,7 +234,7 @@ const server = app.listen(config.port, () => {
 });
 
 server.on("error", (error: NodeJS.ErrnoException) => {
-    lightship.shutdown();
+    // lightship.shutdown();
     log.error("Fatal error.");
 
     if (error.syscall !== "listen") {

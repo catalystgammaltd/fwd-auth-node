@@ -6,6 +6,7 @@
 
 ## Todo:
 
+- [ ] Try Telepresence (https://www.telepresence.io/docs/latest/quick-start/)
 - [ ] Add scope CLI arg to enable fwd-auth to be deployed for different scopes
 - [ ] Change action script so that git tags generate image tags
 
