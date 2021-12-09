@@ -205,7 +205,7 @@ app.all('*', async (req, res) => {
             });
 
         // Trigger login
-        res.oidc.login({ returnTo: `https://${config.baseUrl}${config.callbackPath}` });
+        res.oidc.login({ returnTo: `https://${config.oidcBaseUrl}${config.callbackPath}` });
     }
 });
 
