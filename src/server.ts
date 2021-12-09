@@ -135,7 +135,7 @@ interface FwdArgs {
 }
 
 function urlFromFwdArgs(fwdArgs:FwdArgs): string{
-    const url = `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`
+    const url = `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`;
     log.debug("Forward URL", url);
     return url;
 
