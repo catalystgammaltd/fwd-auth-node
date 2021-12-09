@@ -1,5 +1,18 @@
 # Traefik foward auth handler in node
 
+This service will act as a OIDC aware [forward authentication proxy](https://doc.traefik.io/traefik/middlewares/http/forwardauth/) for [Traefik](https://traefik.io/traefik/), allowing traffic to be authenticated as part of Traefik middleware chain.
+
+It is written in Typescript and inspired by similar efforts by [thomseddon](https://github.com/thomseddon/traefik-forward-auth) and others.
+
+
+## Todo
+
+- [ ] Write up a kustomization example of deploying this service
+- [ ] Write a usage guide
+- [ ] Publish image
+- [ ] Build test suite
+- [ ] Automatically refersh tokens
+
 ## Build and run
 ```
 cd <project_name>
