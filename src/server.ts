@@ -1,7 +1,6 @@
 //node
 import crypto from "crypto";
 import * as path from "path";
-import { strict as assert } from 'assert';
 
 // Externals
 import { createLightship } from 'lightship';
@@ -162,28 +161,7 @@ function urlFromFwdArgs(fwdArgs:FwdArgs): string{
 
 }
 
-app.post(config.callbackPath, async (req, res) => {
-    log.debug("Auth callback endpoint...");
-    if(req.oidc.isAuthenticated()){
-        log.debug("User authenticated.");
-        const fwdArgs : FwdArgs = JSON.parse(req.signedCookies[redir_cookie_name]);
-        res.clearCookie(redir_cookie_name);
-        if(fwdArgs){
-            log.debug("User's forwarding cookies will be honoured");
-            res.redirect(urlFromFwdArgs(fwdArgs));
-        }else{
-            log.debug("User will be redirected to default page");
-            res.redirect(default_landing);
-        }
-    }else{
-        // Trigger login
-        log.debug("User is unauthenticated");
-        res.oidc.login({ 
-            returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
-            authorizationParams: defaultAuthorizationParams,
-        });
-    }
-});
+app.get('/favicon.ico', (req, res) => { res.status(404).send('Not found'); });
 
 function isForwarded(req: express.Request) : boolean {
     if(req.header('x-forwarded-host') && req.header('x-forwarded-prefix')){
