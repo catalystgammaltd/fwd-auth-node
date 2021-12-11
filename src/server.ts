@@ -1,6 +1,7 @@
 //node
 import crypto from "crypto";
 import * as path from "path";
+import { strict as assert } from 'assert';
 
 // Externals
 import { createLightship } from 'lightship';
@@ -123,8 +124,12 @@ app.use(auth({
 }));
 
 
-
-
+const defaultAuthorizationParams = {
+    response_type: 'code',
+    response_mode: 'form_post',
+    audience: "https://api.catalystgamma.com",
+    scope: 'openid profile email offline_access',
+};
 
 interface FwdArgs {
     host: string
@@ -141,16 +146,17 @@ function urlFromFwdArgs(fwdArgs:FwdArgs): string{
 
 }
 
-app.all(config.callbackPath, async (req, res) => {
+app.post(config.callbackPath, async (req, res) => {
     log.debug("Auth callback endpoint...");
     if(req.oidc.isAuthenticated()){
         log.debug("User authenticated.");
         const fwdArgs : FwdArgs = JSON.parse(req.signedCookies[redir_cookie_name]);
+        res.clearCookie(redir_cookie_name);
         if(fwdArgs){
             log.debug("User's forwarding cookies will be honoured");
             res.redirect(urlFromFwdArgs(fwdArgs));
         }else{
-            log.debug("User will be redirceted to default page");
+            log.debug("User will be redirected to default page");
             res.redirect(default_landing);
         }
     }else{
@@ -158,11 +164,7 @@ app.all(config.callbackPath, async (req, res) => {
         log.debug("User is unauthenticated");
         res.oidc.login({ 
             returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
-            authorizationParams: {
-                response_type: 'id_token',
-                response_mode: 'form_post',
-                scope: 'openid profile email',
-              },
+            authorizationParams: defaultAuthorizationParams,
         });
     }
 });
@@ -176,6 +178,9 @@ function isForwarded(req: express.Request) : boolean {
 
 
 app.all('*', async (req, res) => {
+
+    assert(!req.path.startsWith("/callback"), "General handler should not receive auth callbacks!");
+
     if(req.oidc.isAuthenticated()){
         log.debug("Authenticated request received.");
         if(isForwarded(req)){
@@ -214,11 +219,7 @@ app.all('*', async (req, res) => {
         // Trigger login
         res.oidc.login({ 
             returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
-            authorizationParams: {
-                response_type: 'id_token',
-                response_mode: 'form_post',
-                scope: 'openid profile email',
-              },
+            authorizationParams: defaultAuthorizationParams,
         });
     }
 });
