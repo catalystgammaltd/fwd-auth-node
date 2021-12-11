@@ -156,7 +156,14 @@ app.all(config.callbackPath, async (req, res) => {
     }else{
         // Trigger login
         log.debug("User is unauthenticated");
-        res.oidc.login();
+        res.oidc.login({ 
+            returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
+            authorizationParams: {
+                response_type: 'id_token',
+                response_mode: 'form_post',
+                scope: 'openid profile email',
+              },
+        });
     }
 });
 
@@ -205,7 +212,14 @@ app.all('*', async (req, res) => {
             });
 
         // Trigger login
-        res.oidc.login({ returnTo: `${config.oidcBaseUrl}${config.callbackPath}` });
+        res.oidc.login({ 
+            returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
+            authorizationParams: {
+                response_type: 'id_token',
+                response_mode: 'form_post',
+                scope: 'openid profile email',
+              },
+        });
     }
 });
 
