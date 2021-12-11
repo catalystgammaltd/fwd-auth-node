@@ -156,9 +156,7 @@ interface FwdArgs {
 
 function urlFromFwdArgs(fwdArgs:FwdArgs): string{
     const url = `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`;
-    log.debug("Forward URL", url);
     return url;
-
 }
 
 app.get('/favicon.ico', (req, res) => { res.status(404).send('Not found'); });
@@ -182,7 +180,6 @@ app.all('*', async (req, res) => {
     }
 
     if(req.oidc.isAuthenticated()){
-        log.debug("Authenticated request received.");
         if(isForwarded(req)){
             // Fowarded request from authenticated users
             // should be allowed through.
