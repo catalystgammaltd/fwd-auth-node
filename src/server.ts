@@ -123,11 +123,27 @@ app.use(auth({
     },
 }));
 
+/**
+ * Error handling
+ */
+ declare type WebError = Error & { status?: number };
+ app.use((err: WebError, req: Request, res: Response, next: NextFunction): void => {
+     // set locals, only providing error in development
+     res.locals.message = err.message;
+     
+     log.error("Unexpected error occured", err);
+     // console.log(req);
+     // console.log(res);
+     
+     // render the error page
+     res.status(err.status || 500);
+     res.render("error", { title: err.name, message: err.message });
+ });
 
 const defaultAuthorizationParams = {
-    response_type: 'code',
+    response_type: 'id_token',
     response_mode: 'form_post',
-    audience: "https://api.catalystgamma.com",
+    // audience: "https://api.catalystgamma.com",
     scope: 'openid profile email offline_access',
 };
 
@@ -179,7 +195,13 @@ function isForwarded(req: express.Request) : boolean {
 
 app.all('*', async (req, res) => {
 
-    assert(!req.path.startsWith("/callback"), "General handler should not receive auth callbacks!");
+    if(req.path.startsWith("/callback")){
+        res.status(400).render('error', { 
+            status: 400,
+            title: "Bad Request 400",
+            message: "General handler should not receive auth callbacks!",
+        });
+    }
 
     if(req.oidc.isAuthenticated()){
         log.debug("Authenticated request received.");
@@ -195,7 +217,7 @@ app.all('*', async (req, res) => {
             // directly accessing the auth service is probably an error. 
             // Show an appropriate page
             log.debug("Authenticated request was not forwarded. BadDroids error.");
-            res.render('bad-droids', { targetUrl: default_landing });
+            res.status(400).render('bad-droids', { targetUrl: default_landing });
         }
     }else{
         log.info("Request unauthenticated. Triggering login flow.");
@@ -208,39 +230,19 @@ app.all('*', async (req, res) => {
             "prefix":req.header('x-forwarded-prefix'),
             "proto":req.header('x-forwarded-proto'),
         };
-        res.cookie(
-            redir_cookie_name,
-            Buffer.from(JSON.stringify(fwdArgs)).toString('base64'), 
-            { 
-                domain: config.commonAuthDomain,
-                signed: true, 
-            });
 
         // Trigger login
-        res.oidc.login({ 
-            returnTo: `${config.oidcBaseUrl}${config.callbackPath}`,
+        const loginArgs = { 
+            returnTo: urlFromFwdArgs(fwdArgs),
             authorizationParams: defaultAuthorizationParams,
-        });
+        };
+        log.info(loginArgs);
+        res.oidc.login(loginArgs);
     }
 });
 
 
-/**
- * Error handling
- */
-declare type WebError = Error & { status?: number };
-app.use((err: WebError, req: Request, res: Response, next: NextFunction): void => {
-    // set locals, only providing error in development
-    res.locals.message = err.message;
-    
-    log.error("Unexpected error occured", err);
-    // console.log(req);
-    // console.log(res);
-    
-    // render the error page
-    res.status(err.status || 500);
-    res.render("error", { title: err.name, message: err.message });
-});
+
 
 
 
