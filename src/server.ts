@@ -180,20 +180,8 @@ app.all('*', async (req, res) => {
     }
 
     if(req.oidc.isAuthenticated()){
-        if(isForwarded(req)){
-            // Fowarded request from authenticated users
-            // should be allowed through.
-            // 
-            // Apps will then make their own Authorization 
-            // decisions for now.
-            log.debug("Authenticated, forwarded request will be approved.");
-            res.status(200).send('OK');
-        }else{
-            // directly accessing the auth service is probably an error. 
-            // Show an appropriate page
-            log.debug("Authenticated request was not forwarded. BadDroids error.");
-            res.status(400).render('bad-droids', { targetUrl: default_landing });
-        }
+        // Reply with 200, but show bad droids, since page should never be seem by client.
+        res.status(200).render('bad-droids', { targetUrl: default_landing });
     }else{
         log.info("Request unauthenticated. Triggering login flow.");
 
