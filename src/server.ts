@@ -157,7 +157,11 @@ interface FwdArgs {
 }
 
 function urlFromFwdArgs(fwdArgs:FwdArgs): string{
-    const url = `${fwdArgs.proto}://${fwdArgs.host}:${fwdArgs.port}${fwdArgs.prefix}`;
+    const proto = fwdArgs.proto || "https";
+    const host = fwdArgs.host || "catalystgamma.com";
+    const port = fwdArgs.port || 443;
+    const path = fwdArgs.prefix || "/";
+    const url = `${proto}://${host}:${port}${path}`;
     return url;
 }
 
