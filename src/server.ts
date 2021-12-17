@@ -14,6 +14,7 @@ import winston, { createLogger } from "winston";
 
 // Internals
 import { version } from '../package.json';
+import helmet from "helmet";
 
 
 /**
@@ -88,6 +89,7 @@ const lightship = createLightship({
  * Create express app
  */
 export const app = express();
+app.use(helmet());
 
 const redir_cookie_name = '_fwd_auth_redir';
 const default_landing = "https://app.catalystgamma.com";
@@ -142,7 +144,7 @@ app.use(auth({
 const defaultAuthorizationParams = {
     response_type: 'id_token',
     response_mode: 'form_post',
-    // audience: "https://api.catalystgamma.com",
+    // audience: "https://api.staging.catalystgamma.com",
     scope: 'openid profile email offline_access',
 };
 
@@ -161,13 +163,6 @@ function urlFromFwdArgs(fwdArgs:FwdArgs): string{
 
 app.get('/favicon.ico', (req, res) => { res.status(404).send('Not found'); });
 
-function isForwarded(req: express.Request) : boolean {
-    if(req.header('x-forwarded-host') && req.header('x-forwarded-prefix')){
-        return true;
-    }
-    return false;
-}
-
 
 app.all('*', async (req, res) => {
 
@@ -180,8 +175,14 @@ app.all('*', async (req, res) => {
     }
 
     if(req.oidc.isAuthenticated()){
-        // Reply with 200, but show bad droids, since page should never be seem by client.
-        res.status(200).render('bad-droids', { targetUrl: default_landing });
+        const subscriber = req.oidc.user?.sub;
+        log.debug({ subscriber: subscriber });
+        // Reply with 200, but show bad droids, 
+        // since page should never be seem by client.
+        res
+            .header('X-Forwarded-User', subscriber)
+            .status(200)
+            .render('bad-droids', { targetUrl: default_landing });
     }else{
         log.info("Request unauthenticated. Triggering login flow.");
 

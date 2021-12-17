@@ -29,6 +29,7 @@
         "cookie-parser": "^1.4.6",
         "express": "^4.16.2",
         "express-openid-connect": "^2.5.1",
+        "helmet": "^4.6.0",
         "http-errors": "^1.7.1",
         "lightship": "^6.7.2",
         "morgan": "^1.9.1",
